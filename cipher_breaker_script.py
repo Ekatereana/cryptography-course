@@ -1,5 +1,6 @@
 import re
 import codecs
+import base64
 
 # dictionary in human mode
 dict_eng_fq = {
@@ -32,7 +33,7 @@ dict_eng_fq = {
 }
 
 eng_letter_fq = list(dict_eng_fq.values())
-eng_letters = list([l.encode("ascii") for l in dict_eng_fq.keys()])
+eng_letters = list([ord(l) for l in dict_eng_fq.keys()])
 
 
 # solve single byte XOR cipher
@@ -49,15 +50,19 @@ def single_byte_xor(text: bytes, key: int):
     return bytes([el ^ key for el in text])
 
 
-def get_key_length(text):
-    encoded = text.lower().encode("ascii")
-    print(encoded)
-    for shift in range(1, len(text) - 1):
-        print(id_of_coincidence(shift_text(encoded, shift)))
+# solve second task
+def get_key_length(encoded):
+
+    for shift in range(2, len(encoded) - 1):
+        t_matrix = split_into_matrix(encoded, shift)
+        print(f"T == {shift}")
+        for row in range(0, len(t_matrix)):
+            print(f" {row} --> {id_of_coincidence(t_matrix[row])}")
 
 
-def shift_text(text, shift):
-    return str([i for i in text[::shift]])
+def split_into_matrix(text, col_length):
+    row_length = len(text) // col_length
+    return list([text[i:i + row_length] for i in range(0, len(text), row_length)])
 
 
 def id_of_coincidence(origin):
@@ -69,8 +74,11 @@ def id_of_coincidence(origin):
 
 
 def get_fq_letter(letter, text):
-    amount = re.findall(letter, text)
-    return amount / len(text)
+    amount = 0
+    for i in text:
+        if letter == i:
+            amount += 1
+    return amount
 
 
 if __name__ == '__main__':
@@ -86,9 +94,23 @@ if __name__ == '__main__':
          "176e5842175a564e17424452175659175e5953524f1758511754585e59545e53525954521b17"
          "7f565a5a5e595017535e4443565954521b177c56445e445c5e17524f565a5e5956435e58591b"
          "17444356435e44435e54565b17435244434417584517405f564352415245175a52435f585317"
-         "4e5842175152525b174058425b5317445f584017435f52175552444317455244425b4319")
+         "4e5842175152525b174058425b5317445f584017435f52175552444317455244425b4319"),
+        ("G0IFOFVMLRAPI1QJbEQDbFEYOFEPJxAfI10JbEMFIUAAKRAfOVIfOFkYOUQFI15ML1kcJFUeYhA4"
+         "IxAeKVQZL1VMOFgJbFMDIUAAKUgFOElMI1ZMOFgFPxADIlVMO1VMO1kAIBAZP1VMI14ANRAZPEAJ"
+         "PlMNP1VMIFUYOFUePxxMP19MOFgJbFsJNUMcLVMJbFkfbF8CIElMfgZNbGQDbFcJOBAYJFkfbF8C"
+         "KRAeJVcEOBANOUQDIVEYJVMNIFwVbEkDORAbJVwAbEAeI1INLlwVbF4JKVRMOF9MOUMJbEMDIVVM"
+         "P18eOBADKhALKV4JOFkPbFEAK18eJUQEIRBEO1gFL1hMO18eJ1UIbEQEKRAOKUMYbFwNP0RMNVUN"
+         "PhlAbEMFIUUALUQJKBANIl4JLVwFIldMI0JMK0INKFkJIkRMKFUfL1UCOB5MH1UeJV8ZP1wVYBAbP"
+         "lkYKRAFOBAeJVcEOBACI0dAbEkDORAbJVwAbF4JKVRMJURMOF9MKFUPJUAEKUJMOFgJbF4JNERMI"
+         "14JbFEfbEcJIFxCbHIJLUJMJV5MIVkCKBxMOFgJPlVLPxACIxAfPFEPKUNCbDoEOEQcPwpDY1QDL"
+         "0NCK18DK1wJYlMDIR8II1MZIVUCOB8IYwEkFQcoIB1ZJUQ1CAMvE1cHOVUuOkYuCkA4eHMJL3c8J"
+         "WJffHIfDWIAGEA9Y1UIJURTOUMccUMELUIFIlc=")
     ]
 
     # first line solving:
-    f_decoded = codecs.decode(intro_tasks[0], "hex")
-    decode_single_byte_cipher(f_decoded)
+    # f_decoded = codecs.decode(intro_tasks[0], "hex")
+    # decode_single_byte_cipher(f_decoded)
+
+    #  second line solving
+    s_decoded = base64.b64decode(intro_tasks[1])
+    get_key_length(s_decoded)

@@ -119,6 +119,48 @@ def calc_hamming_dist(f_chunk: bytes, s_chunk: bytes) -> int:
     return distance
 
 
+def get_key_word(text: bytes, key: int) -> str:
+    dummy_criteria = 'ETAOIN SHRDLU'
+    matrix = split_into_key_matrix(text, key)
+    key_word = ''
+
+    for chunk in matrix:
+        highest_score = 0
+        curr_key_letter = ''
+
+        for symbol in range(255):
+            xor_ed = [symbol ^ b for b in chunk]
+
+            try:
+                str_xor = bytes(xor_ed).decode("ascii")
+                score = 0
+                for char in str_xor.upper():
+                    score += 1 if char in dummy_criteria else 0
+
+                if score > highest_score:
+                    highest_score = score
+                    curr_key_letter = chr(symbol)
+            except UnicodeDecodeError as err:
+                continue
+        key_word += curr_key_letter
+    return key_word
+
+
+def split_into_key_matrix(text: bytes, key_length: int) -> []:
+    matrix = list([[] for i in range(key_length)])
+    chunk_num = 0
+    id = 0
+    while id < len(text):
+        if chunk_num % key_length == 0:
+            chunk_num = 0
+        matrix[chunk_num].append(text[id])
+        chunk_num += 1
+        id += 1
+
+    return matrix
+
+
+
 if __name__ == '__main__':
     intro_tasks = [
         ("7958401743454e1756174552475256435e59501a5c524e176f786517545e475f524519177219"
@@ -153,9 +195,12 @@ if __name__ == '__main__':
     #  second line solving
     s_decoded = base64.b64decode(intro_tasks[1])
 
-    names, values, key_size = get_keylength(s_decoded)
+    names, values = get_key_length(s_decoded)
 
-    plt.figure(figsize=(9, 3))
-    plt.bar(names, values)
-    plt.show()
-#      key length == 3
+    # plt.figure(figsize=(9, 3))
+    # plt.bar(names, values)
+    # plt.show()
+
+    #   key length == 3
+
+    print(get_key_word(s_decoded, 3))

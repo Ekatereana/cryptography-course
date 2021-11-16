@@ -52,23 +52,23 @@ def single_byte_xor(text: bytes, key: int):
 
 
 # solve second task
-def get_key_length(encoded):
-    shifts = []
-    c_ids = []
-    for shift in range(1, 12):
-        t_matrix = shift_text(encoded, shift)
-        shifts.append(shift)
-        c_ids.append(id_of_coincidence(t_matrix))
-    return shifts, c_ids
-
-
-def shift_text(text, t):
-    return list([text[i * t] for i in range(0, len(text) // t)])
-
-
-def id_of_coincidence(origin):
-    fqs = [get_fq_letter(l, origin) for l in eng_letters]
-    return sum([fq * (fq - 1) for fq in fqs]) / (len(origin) * (len(origin) - 1))
+# def get_key_length(encoded):
+#     shifts = []
+#     c_ids = []
+#     for shift in range(1, 12):
+#         t_matrix = shift_text(encoded, shift)
+#         shifts.append(shift)
+#         c_ids.append(id_of_coincidence(t_matrix))
+#     return shifts, c_ids
+#
+#
+# def shift_text(text, t):
+#     return list([text[i * t] for i in range(0, len(text) // t)])
+#
+#
+# def id_of_coincidence(origin):
+#     fqs = [get_fq_letter(l, origin) for l in eng_letters]
+#     return sum([fq * (fq - 1) for fq in fqs]) / (len(origin) * (len(origin) - 1))
 
 
 def get_fq_letter(letter, text):
@@ -77,6 +77,46 @@ def get_fq_letter(letter, text):
         if letter == i:
             amount += 1
     return amount
+
+
+def get_key_length(text):
+    sizes = []
+    h_distance = []
+
+    for shift in range(1, 12):
+        to_average = []
+        start = 0
+        end = start + shift
+        while end + shift <= len(text):
+            first_chunk = text[start:end]
+            second_chunk = text[end:end + shift]
+            distance = calc_hamming_dist(first_chunk, second_chunk)
+            normalized = distance / shift
+            to_average.append(normalized)
+            start = end + shift
+            end = start + shift
+            to_average.append(normalized)
+
+        average = sum(to_average) / len(to_average)
+        sizes.append(shift)
+        h_distance.append(average)
+
+    return sizes, h_distance
+
+
+def calc_hamming_dist(f_chunk: bytes, s_chunk: bytes) -> int:
+    assert len(f_chunk) == len(s_chunk)
+
+    distance = 0
+    for enc in zip(f_chunk, s_chunk):
+        xor = enc[0] ^ enc[1]
+        step = 0
+        while xor > 0:
+            step += xor & 1
+            xor >>= 1
+        distance += step
+
+    return distance
 
 
 if __name__ == '__main__':
@@ -112,8 +152,10 @@ if __name__ == '__main__':
 
     #  second line solving
     s_decoded = base64.b64decode(intro_tasks[1])
-    # s_decoded = s_decoded.decode("ascii").lower().encode("ascii")
+
+    names, values, key_size = get_keylength(s_decoded)
+
     plt.figure(figsize=(9, 3))
-    names, values = get_key_length(s_decoded)
     plt.bar(names, values)
     plt.show()
+#      key length == 3

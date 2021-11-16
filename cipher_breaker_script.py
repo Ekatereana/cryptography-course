@@ -1,6 +1,7 @@
 import re
 import codecs
 import base64
+import matplotlib.pyplot as plt
 
 # dictionary in human mode
 dict_eng_fq = {
@@ -52,25 +53,22 @@ def single_byte_xor(text: bytes, key: int):
 
 # solve second task
 def get_key_length(encoded):
+    shifts = []
+    c_ids = []
+    for shift in range(1, 12):
+        t_matrix = shift_text(encoded, shift)
+        shifts.append(shift)
+        c_ids.append(id_of_coincidence(t_matrix))
+    return shifts, c_ids
 
-    for shift in range(2, len(encoded) - 1):
-        t_matrix = split_into_matrix(encoded, shift)
-        print(f"T == {shift}")
-        for row in range(0, len(t_matrix)):
-            print(f" {row} --> {id_of_coincidence(t_matrix[row])}")
 
-
-def split_into_matrix(text, col_length):
-    row_length = len(text) // col_length
-    return list([text[i:i + row_length] for i in range(0, len(text), row_length)])
+def shift_text(text, t):
+    return list([text[i * t] for i in range(0, len(text) // t)])
 
 
 def id_of_coincidence(origin):
-    return sum([fq * (fq - 1)
-                for fq in
-                [get_fq_letter(l, origin) for l in eng_letters]
-                ]
-               ) / (len(origin) * (len(origin) - 1))
+    fqs = [get_fq_letter(l, origin) for l in eng_letters]
+    return sum([fq * (fq - 1) for fq in fqs]) / (len(origin) * (len(origin) - 1))
 
 
 def get_fq_letter(letter, text):
@@ -95,6 +93,7 @@ if __name__ == '__main__':
          "7f565a5a5e595017535e4443565954521b177c56445e445c5e17524f565a5e5956435e58591b"
          "17444356435e44435e54565b17435244434417584517405f564352415245175a52435f585317"
          "4e5842175152525b174058425b5317445f584017435f52175552444317455244425b4319"),
+
         ("G0IFOFVMLRAPI1QJbEQDbFEYOFEPJxAfI10JbEMFIUAAKRAfOVIfOFkYOUQFI15ML1kcJFUeYhA4"
          "IxAeKVQZL1VMOFgJbFMDIUAAKUgFOElMI1ZMOFgFPxADIlVMO1VMO1kAIBAZP1VMI14ANRAZPEAJ"
          "PlMNP1VMIFUYOFUePxxMP19MOFgJbFsJNUMcLVMJbFkfbF8CIElMfgZNbGQDbFcJOBAYJFkfbF8C"
@@ -113,4 +112,8 @@ if __name__ == '__main__':
 
     #  second line solving
     s_decoded = base64.b64decode(intro_tasks[1])
-    get_key_length(s_decoded)
+    # s_decoded = s_decoded.decode("ascii").lower().encode("ascii")
+    plt.figure(figsize=(9, 3))
+    names, values = get_key_length(s_decoded)
+    plt.bar(names, values)
+    plt.show()

@@ -52,32 +52,6 @@ def single_byte_xor(text: bytes, key: int):
 
 
 # solve second task
-# def get_key_length(encoded):
-#     shifts = []
-#     c_ids = []
-#     for shift in range(1, 12):
-#         t_matrix = shift_text(encoded, shift)
-#         shifts.append(shift)
-#         c_ids.append(id_of_coincidence(t_matrix))
-#     return shifts, c_ids
-#
-#
-# def shift_text(text, t):
-#     return list([text[i * t] for i in range(0, len(text) // t)])
-#
-#
-# def id_of_coincidence(origin):
-#     fqs = [get_fq_letter(l, origin) for l in eng_letters]
-#     return sum([fq * (fq - 1) for fq in fqs]) / (len(origin) * (len(origin) - 1))
-
-
-def get_fq_letter(letter, text):
-    amount = 0
-    for i in text:
-        if letter == i:
-            amount += 1
-    return amount
-
 
 def get_key_length(text):
     sizes = []

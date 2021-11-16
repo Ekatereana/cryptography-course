@@ -160,6 +160,12 @@ def split_into_key_matrix(text: bytes, key_length: int) -> []:
     return matrix
 
 
+def decrypt_phrase(text: bytes, key_length: int) -> str:
+    key = get_key_word(text, key_length)
+    repeated_key = bytes([ord(key[i % key_length]) for i in range(len(text))])
+    decrypted = bytes([byte ^ key_l for key_l, byte in zip(repeated_key, text)])
+    return decrypted
+
 
 if __name__ == '__main__':
     intro_tasks = [
@@ -203,4 +209,4 @@ if __name__ == '__main__':
 
     #   key length == 3
 
-    print(get_key_word(s_decoded, 3))
+    print(decrypt_phrase(s_decoded, 3))

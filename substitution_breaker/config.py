@@ -4,6 +4,7 @@ class def_genetic_conf:
         "generations": 100,
         "population_size": 100,
         "tournament_size": 10,
+        "k_tournament": 2,
         "winner_probability": 0.75,
         "crossover_probability": 0.65,
         "crossover_points_count": 5,

@@ -1,9 +1,7 @@
 from generic_algo import genetic_algo
 
 alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-                  'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-
-
+            'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 if __name__ == '__main__':
     intro_tasks = [
@@ -22,5 +20,9 @@ if __name__ == '__main__':
     ]
 
     # third line solving:
-    # print(fitness_func(bytes(intro_tasks[0], "ascii"), 'ABCDEFGHIJKLMNOPSQRTUVXWYZ', 3))
-    solver = genetic_algo(alphabet_order)
+
+    solver = genetic_algo("../assets/train_text.txt", alphabet)
+    population = solver.initialize()
+    fitness = solver.evaluate(bytes(intro_tasks[0], "ascii"), population)
+    solver.select(population, fitness)
+    print()

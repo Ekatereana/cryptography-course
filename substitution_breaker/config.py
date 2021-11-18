@@ -16,9 +16,6 @@ class def_genetic_conf:
         "weights": [0, 1.0],
         "usage_params": {"verbose": False},
 
-        # default (immutable)
-        "letters": 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
     }
     __setters = ["generations", "population_size", "tournament_size",
                  "winner_probability", "crossover_probability", "crossover_points_count",

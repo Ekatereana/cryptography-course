@@ -1,9 +1,9 @@
 class def_genetic_conf:
     __conf = {
         # algorithm specific parameters
-        "generations": 100,
-        "population_size": 100,
-        "tournament_size": 10,
+        "generations": 500,
+        "population_size": 500,
+        "tournament_size": 20,
         "k_tournament": 2,
         "winner_probability": 0.75,
         "crossover_probability": 0.65,
@@ -13,14 +13,12 @@ class def_genetic_conf:
         "selection_method": 'TS',
         "termination": 100,
 
-        # bigram, trigram
-        "weights": [0, 1.0],
         "usage_params": {"verbose": True},
 
     }
     __setters = ["generations", "population_size", "tournament_size",
                  "winner_probability", "crossover_probability", "crossover_points_count",
-                 "mutation_probability", "elitism_percent", "selection_method", "termination", "weights",
+                 "mutation_probability", "elitism_percent", "selection_method", "termination",
                  "usage_params"]
 
     @staticmethod

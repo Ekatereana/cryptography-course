@@ -84,17 +84,17 @@ class GeneticAlgo:
 
         return population
 
-    def evaluate(self, text: bytes, trained_grams: [], population: []):
+    def evaluate(self, text: bytes, population: []):
         fitness = []
 
         for key in population:
-            key_fitness = self.calculate_fitness(text, trained_grams, key)
+            key_fitness = self.calculate_fitness(text, key)
             fitness.append(key_fitness)
 
         return fitness
 
-    def calculate_fitness(self, text: bytes, trained_grams: [], key: []):
-        return self.fitness(text, trained_grams[1], key, 3)
+    def calculate_fitness(self, text: bytes, key: []):
+        return self.fitness(text, key, 3)
 
     def rw_select(self, fitness):
         index = -1
@@ -110,52 +110,56 @@ class GeneticAlgo:
 
         return index
 
-    # def select(self, population, fitness):
-    #     population_copy = population.copy()
-    #     selected_keys = []
-    #
-    #     iteration = 0
-    #
-    #     while iteration < self.k_tournament:
-    #         tournament_population = {}
-    #         iteration += 1
-    #
-    #         for _ in range(self.tournament_size):
-    #             if len(population_copy) == 0: population_copy = population.copy()
-    #
-    #             r = randint(0, max(len(population_copy) - 1, 1))
-    #             key = population[r]
-    #             key_fitness = fitness[r]
-    #
-    #             tournament_population[key] = key_fitness
-    #             population_copy.pop(r)
-    #
-    #         sorted_tournament_population = \
-    #             {k: v for k, v in sorted(tournament_population.items(), key=lambda item: item[1], reverse=True)}
-    #         tournament_keys = list(sorted_tournament_population.keys())
-    #
-    #         index = -1
-    #         selected = False
-    #         while not selected:
-    #             index = randint(0, self.tournament_size - 1)
-    #             probability = self.tournament_probabilities[index]
-    #
-    #             r = uniform(0, self.winner_probability)
-    #             selected = (r < probability)
-    #
-    #         selected_keys.append(tournament_keys[index])
-    #
-    #     return selected_keys[0], selected_keys[1]
+    def t_select(self, population, fitness):
+        population_copy = population.copy()
+        selected_keys = []
+
+        iteration = 0
+
+        while iteration < self.k_tournament:
+            tournament_population = {}
+            iteration += 1
+
+            for _ in range(self.tournament_size):
+                if len(population_copy) == 0: population_copy = population.copy()
+
+                r = randint(0, max(len(population_copy) - 1, 1))
+                key = population[r]
+                key_fitness = fitness[r]
+
+                tournament_population[key] = key_fitness
+                population_copy.pop(r)
+
+            sorted_tournament_population = \
+                {k: v for k, v in sorted(tournament_population.items(), key=lambda item: item[1], reverse=True)}
+            tournament_keys = list(sorted_tournament_population.keys())
+
+            index = -1
+            selected = False
+            while not selected:
+                index = randint(0, self.tournament_size - 1)
+                probability = self.tournament_probabilities[index]
+
+                r = uniform(0, self.winner_probability)
+                selected = (r < probability)
+
+            selected_keys.append(tournament_keys[index])
+
+        return selected_keys[0], selected_keys[1]
 
     def cross(self, population, fitness):
         crossover = []
 
         while len(crossover) < self.crossover_count:
-            parent_one_index = self.rw_select(fitness)
-            parent_two_index = self.rw_select(fitness)
 
-            parent_one = population[parent_one_index]
-            parent_two = population[parent_two_index]
+            if self.selection_method == 'RWS':
+                parent_one_index = self.rw_select(fitness)
+                parent_two_index = self.rw_select(fitness)
+
+                parent_one = population[parent_one_index]
+                parent_two = population[parent_two_index]
+            else:
+                parent_one, parent_two = self.t_select(population, fitness)
 
             offspring_one = self.merge_keys(parent_one, parent_two)
             offspring_two = self.merge_keys(parent_two, parent_one)
@@ -230,7 +234,7 @@ class GeneticAlgo:
         highest_fitness = 0
         stuck_counter = 0
         for iter in range(self.generations + 1):
-            fitness = self.evaluate(text, [t_trigrams, t_bigrams], population)
+            fitness = self.evaluate(text, population)
             elitist_population = self.apply_elitism(population, fitness)
             crossover_population = self.cross(population, fitness)
 
@@ -250,7 +254,7 @@ class GeneticAlgo:
 
             index = fitness.index(highest_fitness)
             key = population[index]
-            decrypted_text = self.fitness.decrypt_with_key(text, key)
+            decrypted_text = self.decrypt_with_key(text, key)
 
             if self.verbose:
                 print('[Generation ' + str(iter) + ']', )
@@ -260,5 +264,4 @@ class GeneticAlgo:
                 print('Decrypted Text:')
                 print(decrypted_text)
 
-        plaintext = self.convert_to_plaintext(decrypted_text)
         return decrypted_text

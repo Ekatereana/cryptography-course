@@ -15,7 +15,7 @@ class def_genetic_conf:
 
         # bigram, trigram
         "weights": [0, 1.0],
-        "usage_params": {"verbose": False},
+        "usage_params": {"verbose": True},
 
     }
     __setters = ["generations", "population_size", "tournament_size",

@@ -1,4 +1,4 @@
-from generic_algo import genetic_algo
+from generic_algo import GeneticAlgo
 
 alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
             'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
@@ -21,8 +21,9 @@ if __name__ == '__main__':
 
     # third line solving:
 
-    solver = genetic_algo("../assets/train_text.txt", alphabet)
-    population = solver.initialize()
-    fitness = solver.evaluate(bytes(intro_tasks[0], "ascii"), population)
-    solver.select(population, fitness)
-    print()
+    solver = GeneticAlgo('../assets/tri_grams_fq.csv', alphabet)
+    # population = solver.initialize()
+    # fitness = solver.evaluate(bytes(intro_tasks[0], "ascii"), population)
+    # solver.cross(population, fitness)
+    text = solver.solve(bytes(intro_tasks[0], "ascii"))
+    print(text)

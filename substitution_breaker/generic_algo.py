@@ -121,9 +121,9 @@ class GeneticAlgo:
             iteration += 1
 
             for _ in range(self.tournament_size):
-                if len(population_copy) == 0: population_copy = population.copy()
+                if len(population_copy) == 0 : population_copy = population.copy()
 
-                r = randint(0, max(len(population_copy) - 1, 1))
+                r = randint(0, max(len(population_copy) - 1, 0))
                 key = population[r]
                 key_fitness = fitness[r]
 
@@ -137,7 +137,7 @@ class GeneticAlgo:
             index = -1
             selected = False
             while not selected:
-                index = randint(0, self.tournament_size - 1)
+                index = randint(0, len(tournament_keys) - 1)
                 probability = self.tournament_probabilities[index]
 
                 r = uniform(0, self.winner_probability)

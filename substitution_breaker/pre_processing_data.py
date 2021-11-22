@@ -12,5 +12,5 @@ if __name__ == "__main__":
     with open('../assets/tri_grams_fq.csv', 'w', newline="") as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(headers)
-        for key, value in frequency.items():
+        for key, value in fq.items():
             writer.writerow([key, value])

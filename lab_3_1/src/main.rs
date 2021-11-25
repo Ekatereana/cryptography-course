@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 
 fn hack_lcg() {
     println!("Start hacking...");
@@ -25,17 +24,7 @@ fn hack_lcg() {
     println!("Fuck :(");
 }
 
-fn create_account() {
-
-}
-
-#[tokio::main]
-async fn main() {
-    let resp = reqwest::get(format!("http://95.217.177.249/casino/createacc?id={}", 4731))
-        .await.unwrap()
-        .json::<HashMap<String, String>>()
-        .await.unwrap()
-        ;
-    println!("{:?}", resp);
+fn main() {
+    hack_lcg();
 }
 

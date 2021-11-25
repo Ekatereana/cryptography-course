@@ -1,7 +1,8 @@
-import re
 import codecs
 import base64
 import matplotlib.pyplot as plt
+
+from shared_code.xor_utils import single_byte_xor
 
 # dictionary in human mode
 dict_eng_fq = {
@@ -45,10 +46,6 @@ def decode_single_byte_cipher(text: bytes):
             print(single_byte_xor(text, k).decode("utf-8"))
         except UnicodeDecodeError:
             continue
-
-
-def single_byte_xor(text: bytes, key: int):
-    return bytes([el ^ key for el in text])
 
 
 # solve second task
@@ -169,17 +166,17 @@ if __name__ == '__main__':
     ]
 
     # first line solving:
-    # f_decoded = codecs.decode(intro_tasks[0], "hex")
-    # decode_single_byte_cipher(f_decoded)
+    f_decoded = codecs.decode(intro_tasks[0], "hex")
+    decode_single_byte_cipher(f_decoded)
 
     #  second line solving
     s_decoded = base64.b64decode(intro_tasks[1])
 
     names, values = get_key_length(s_decoded)
 
-    # plt.figure(figsize=(9, 3))
-    # plt.bar(names, values)
-    # plt.show()
+    plt.figure(figsize=(9, 3))
+    plt.bar(names, values)
+    plt.show()
 
     #   key length == 3
 

@@ -1,7 +1,5 @@
 from generic_algo import GeneticAlgo
-
-alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
-            'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+from shared_code import alphabet
 
 if __name__ == '__main__':
     intro_tasks = [
@@ -18,12 +16,26 @@ if __name__ == '__main__':
          "BVTTPENLPYPQLWLRPTEKLWZYCKVPTCSTESQPBYMEHVPETCMEHVPETZMEH"
          "VPETKTMEHVPETCMEHVPETT")
     ]
+    # ADD
+    # THE
+    # AMIBITY
+    # TO
+    # DELICHERANYKINDOPCOBYABCHAMETIL
+    # SUMSTITUTION
+    # LICHERS
+    # THE ONE USED IN THE LICHER TEXTS HERE HAS TWENTY SIX INDECENDENTRANDOVBYLH
+    # OSENVONOABCHAMETILSUMSTITUTIONCATTERNSPOREALHBETTERPROVENGBISHAB
+    # CHAMETITISLBEARTHATYOULANNOBONGERREBYONTHESAVESIVCBEROUTINEOPGUE
+    # SSINGTHEKEYMYEXHAUSTIFESEARLHWHILHYOUCROMAMBYUSEDTODELICHERTHECR
+    # EFIOUSCARAGRACHWIBBTHEINDEXOPLOINLIDENLESTIBBWORKASASUGGESTIONYO
+    # ULANTRYTODIFIDETHEVESSAGEINCARTSMYTHENUVMEROPLHARALTERSINAKEYAND
+    # ACCBYPREQUENLYANABYSISTOEALHOPTHEVLANYOUPINDAWAYTOUSEHIGHERORDER
+    # PREQUENLYSTATISTILSWITHTHISTYCEOPLICHERTHENEXTVAGILABWORDWIBBTAK
+    # ETOTHENEXTBAMENJOYMITBYSBASHTWOLACITABYLACITABJLACITABMBLACITABY
+    # LACITABB
 
     # third line solving:
 
     solver = GeneticAlgo('../assets/tri_grams_fq.csv', alphabet)
-    # population = solver.initialize()
-    # fitness = solver.evaluate(bytes(intro_tasks[0], "ascii"), population)
-    # solver.cross(population, fitness)
     text = solver.solve(bytes(intro_tasks[0], "ascii"))
     print(text)

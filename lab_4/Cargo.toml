@@ -7,5 +7,10 @@ edition = "2018"
 
 [dependencies]
 clap = "0.5.1"
-tabled = "0.2.2"
-rand = "0.8.4"
+prettytable-rs = "0.8.0"
+rand = "0.8.4" # not secure random number generator
+md5 = "0.7.0"
+rust-argon2 = "0.8.3"
+rand_chacha = "0.3.0" # A cryptographically secure random number generator that uses the ChaCha algorithm
+bcrypt = "0.10"
+sha2 = "0.9.8"

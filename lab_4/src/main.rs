@@ -1,9 +1,10 @@
-use crate::formatter::print_passwords;
-use crate::generator::PasswordGenerator;
+use std::collections::HashMap;
+use std::iter::FromIterator;
 
 mod config;
 mod formatter;
 mod generator;
+mod hasher;
 
 fn main() {
     let matches = config::get_cli_matches();
@@ -12,13 +13,25 @@ fn main() {
             .parse::<usize>()
             .expect("expect valid integer literal");
 
-        let mut password_generator = generator::PasswordGenerator::new("top_passwords.txt");
+        let mut password_generator =
+            generator::PasswordGenerator::new("top_passwords.txt", "dictionary.txt");
         let passwords = password_generator.generate_passwords(n);
 
-        formatter::print_passwords(&passwords);
+        let data = if matches.is_present(config::ARG_HASH) {
+            hasher::hash_passwords(&passwords, &matches.values_of(config::ARG_HASH).unwrap())
+        } else {
+            passwords
+                .into_iter()
+                .map(|s| HashMap::from_iter(vec![("password", s)].into_iter()))
+                .collect()
+        };
 
-        if let Some(filepath) = matches.value_of(config::ARG_OUTPUT_FILEPATH) {}
-    } else {
-        println!("Nothing to do :(");
+        if !matches.is_present(config::ARG_NOT_PRINT) {
+            formatter::print_passwords(&data);
+        }
+
+        if let Some(filepath) = matches.value_of(config::ARG_OUTPUT_FILEPATH) {
+            formatter::write_to_file(&data, filepath, matches.value_of(config::ARG_FILE_FORMAT));
+        }
     }
 }

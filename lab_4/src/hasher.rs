@@ -9,6 +9,11 @@ pub const MD5: &str = "md5";
 pub const ARGON2: &str = "argon2";
 pub const BCRYPT: &str = "bcrypt";
 
+fn format_argon2_hash(hash: String) -> String {
+    let parts = hash.split("$").collect::<Vec<_>>();
+    format!("${}${}", parts[4], parts[5])
+}
+
 fn hash_password(
     pass: &str,
     algos: &Vec<&str>,
@@ -26,17 +31,17 @@ fn hash_password(
             }),
             &ARGON2 => (
                 ARGON2,
-                argon2::hash_encoded(
+                format_argon2_hash(argon2::hash_encoded(
                     pass.as_bytes(),
                     &(0..15)
                         .map(|_| (generator.next_u32() % 256) as u8)
                         .collect::<Vec<_>>(),
                     &argon2::Config::default(),
                 )
-                .unwrap(),
+                .unwrap()),
             ),
             // bcrypt::hash will generate the salt by itself
-            &BCRYPT => (BCRYPT, bcrypt::hash(pass, 16).unwrap()),
+            &BCRYPT => (BCRYPT, bcrypt::hash(pass, 8).unwrap()),
             _ => panic!(
                 "Hashing algorithm {} is not supported. See --help for more information.",
                 algo

@@ -73,8 +73,21 @@ impl PasswordGenerator {
     }
 
     pub fn generate_passwords(&mut self, amount: usize) -> Vec<String> {
-        (1..=amount)
-            .map(|_| self.generate_password())
-            .collect::<Vec<String>>()
+        if amount > 100 {
+            (1..=amount)
+                .map(|_| self.generate_password())
+                .collect::<Vec<String>>()
+        } else {
+            let mut threads = Vec::with_capacity(100);
+            let amount_thread = amount / 100;
+            for _ in 0..100 {
+                std::thread::spawn(|| {
+                   let res = (1..=amount_thread)
+                           .map(|_| self.generate_password())
+                           .collect::<Vec<String>>();
+                });
+            }
+            Vec::new()
+        }
     }
 }

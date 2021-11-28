@@ -7,7 +7,7 @@ import {
   usernameInvalidFormatError,
   usernameTooLongError,
   fullNameInvalidFormatError,
-  passwordTooShortError,
+  passwordTooShortError, passwordNotValidError,
 } from '../services/errors';
 
 const emailRegularExpression = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -60,11 +60,50 @@ export const validateFullName = (fullName: string | undefined) => {
   }
 };
 
-export const validatePassword = (password: string | undefined, minPasswordLength = 6) => {
+export const validatePassword = (password: string | undefined, minPasswordLength = 10) => {
   if (password === undefined) {
     throw fieldNotSetError('password');
   }
+  let lower = false;
+  let upper = false;
+  let num = false;
+  let special = false;
+
+  for (let i = 0; i < password.length; i++) {
+    const c = password.charCodeAt(i);
+    console.log(c);
+    if (c >= 65 && c <= 90) {
+      upper = true;
+    }
+    if (c >= 97 && c <= 122) {
+      lower = true;
+    }
+    if (c >= 48 && c <= 57) {
+      num = true;
+    }
+    if ((c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126)) {
+      special = true;
+    }
+  }
+
   if (password.length < minPasswordLength) {
     throw passwordTooShortError(password, minPasswordLength);
+  }
+
+  let errors = '';
+  if (!upper) {
+    errors += 'Need at least one uppercase.\n';
+  }
+  if (!lower) {
+    errors += 'Need at least one lowercase.\n';
+  }
+  if (!num) {
+    errors += 'Need at least one number.\n';
+  }
+  if (!special) {
+    errors += 'Need at least one special character.\n';
+  }
+  if (errors !== '') {
+    throw passwordNotValidError(password, errors);
   }
 };

@@ -42,6 +42,12 @@ export const passwordTooShortError = (_password: string, minPasswordLength: numb
   errorMessage: `Password is too short: should be at least ${minPasswordLength} characters long`,
 });
 
+export const passwordNotValidError = (_password: string, message: string): ApiError => ({
+  status: 400,
+  errorCode: 'PASSWORD_NOT_VALID',
+  errorMessage: `Password is not valid: ${message}`,
+});
+
 export const userAlreadyExistsError = (email: string): ApiError => ({
   status: 400,
   errorCode: 'USER_ALREADY_EXISTS',

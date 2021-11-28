@@ -25,21 +25,50 @@ const handleChange = (value: string,
   }
 };
 
+const validatePassword = (password: string): boolean[] => {
+  let lower = false;
+  let upper = false;
+  let num = false;
+  let special = false;
+
+  for (let i = 0; i < password.length; i++) {
+    const c = password.charCodeAt(i);
+    console.log(c);
+    if (c >= 65 && c <= 90) {
+      upper = true;
+    }
+    if (c >= 97 && c <= 122) {
+      lower = true;
+    }
+    if (c >= 48 && c <= 57) {
+      num = true;
+    }
+    if ((c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126)) {
+      special = true;
+    }
+  }
+
+  return [lower, upper, num, special, password.length >= 10];
+};
+
 const validatePasswords = (pass1: string,
                            pass2: string,
                            set: (value: string) => void,
-                           setError: (value: string) => void) => {
+                           setRepeatError: (value: string) => void,
+                           setPasswordError: (value: boolean[]) => void
+) => {
+  setPasswordError(validatePassword(pass1));
   if (pass1 === '' || pass2 === '') {
     set(pass1);
     return;
   }
   if (pass1 !== pass2) {
     set(pass1);
-    setError('passwords do not match');
+    setRepeatError('passwords do not match');
     return;
   }
   set(pass1);
-  setError('');
+  setRepeatError('');
 };
 
 export interface IRegisterProps {
@@ -58,8 +87,9 @@ const RegisterPage: React.FC<IRegisterProps> = ({ isLoading, register }) => {
   const [emailError, setEmailError] = useState<string>('');
 
   const [password, setPassword] = useState<string>('');
+  const [passwordValidations, setPasswordValidations] = useState<boolean[]>([false, false, false, false, false]);
   const [passwordRepeat, setPasswordRepeat] = useState<string>('');
-  const [passwordError, setPasswordError] = useState<string>('');
+  const [passwordRepeatError, setPasswordRepeatError] = useState<string>('');
 
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault();
@@ -95,17 +125,22 @@ const RegisterPage: React.FC<IRegisterProps> = ({ isLoading, register }) => {
             handleChange(event.target.value, emailRegex, ' not valid', setEmail, setEmailError)
           }/>
           <label>Password</label>
+          <label className={passwordValidations[0] ? styles.success : styles.error}>{passwordValidations[0] ? '\u2713' : '\u2717'} Lowercase letter</label>
+          <label className={passwordValidations[1] ? styles.success : styles.error}>{passwordValidations[1] ? '\u2713' : '\u2717'} Uppercase letter</label>
+          <label className={passwordValidations[2] ? styles.success : styles.error}>{passwordValidations[2] ? '\u2713' : '\u2717'} Number</label>
+          <label className={passwordValidations[3] ? styles.success : styles.error}>{passwordValidations[3] ? '\u2713' : '\u2717'} Special character</label>
+          <label className={passwordValidations[4] ? styles.success : styles.error}>{passwordValidations[4] ? '\u2713' : '\u2717'} Have minimum 10 symbols</label>
           <input className={inputs.input_standard} type="password" onChange={event =>
-            validatePasswords(event.target.value, passwordRepeat, setPassword, setPasswordError)
+            validatePasswords(event.target.value, passwordRepeat, setPassword, setPasswordRepeatError, setPasswordValidations)
           }/>
           <label>Repeat password</label>
           <input className={inputs.input_standard} type="password"
                  onChange={event =>
-                   validatePasswords(event.target.value, password, setPasswordRepeat, setPasswordError)
+                   validatePasswords(password, event.target.value, setPasswordRepeat, setPasswordRepeatError, setPasswordValidations)
                  }
           />
-          {passwordError &&
-            <label className={styles.error} style={{marginTop: "0.25em"}}>{passwordError}</label>
+          {passwordRepeatError &&
+            <label className={styles.error} style={{marginTop: "0.25em"}}>{passwordRepeatError}</label>
           }
           {isLoading
             ? <Loader />

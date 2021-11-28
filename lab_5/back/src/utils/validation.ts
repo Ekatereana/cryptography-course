@@ -71,7 +71,6 @@ export const validatePassword = (password: string | undefined, minPasswordLength
 
   for (let i = 0; i < password.length; i++) {
     const c = password.charCodeAt(i);
-    console.log(c);
     if (c >= 65 && c <= 90) {
       upper = true;
     }

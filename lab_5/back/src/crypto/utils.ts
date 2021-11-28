@@ -1,9 +1,14 @@
 import * as bcrypt from 'bcrypt';
+import { sha512 } from 'sha.js';
 
-export const hashPassword = (password: string): Promise<string> => {
-  return bcrypt.hash(password, 10);
+// schema: bcrypt(salt + sha512(password))
+export const hashPassword = async (password: string): Promise<string> => {
+  const hash = await bcrypt.hash(new sha512().update(password).digest('hex'), 16);
+  return hash.substr(7);
 };
 
 export const comparePasswords = (password: string, hash: string): Promise<boolean> => {
-  return bcrypt.compare(password, hash);
+  const middlePassword = new sha512().update(password).digest('hex');
+  const middleHash = '$2b$16$' + hash;
+  return bcrypt.compare(middlePassword, middleHash);
 };

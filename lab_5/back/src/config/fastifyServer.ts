@@ -11,7 +11,7 @@ import { registerPlugin } from '../plugins/register';
 import { IUserService } from '../services/userService';
 import { IAuthService } from '../services/authService';
 
-const allowUnauthorized = new Set(['/', '/healthz', '/auth/health']);
+const allowUnauthorized = new Set(['/', '/healthz', '/auth/health', '/auth/login', '/auth/register']);
 
 const cookieHook = (
     request: FastifyRequest<RouteGenericInterface, Server, IncomingMessage>,

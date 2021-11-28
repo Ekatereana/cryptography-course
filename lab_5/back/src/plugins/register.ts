@@ -28,6 +28,7 @@ export const registerPlugin: FastifyPluginCallback<RegisterPluginOptions> = (fas
       await options.authService.register(userData);
       response.code(204);
     } catch (err) {
+      console.log('register error:');
       console.error(err);
       response.code(err.status || 500).send(err.errorMessage || err);
     }

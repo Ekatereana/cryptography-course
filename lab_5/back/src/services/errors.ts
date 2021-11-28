@@ -45,7 +45,7 @@ export const passwordTooShortError = (_password: string, minPasswordLength: numb
 export const userAlreadyExistsError = (email: string): ApiError => ({
   status: 400,
   errorCode: 'USER_ALREADY_EXISTS',
-  errorMessage: `User with email "${email}" already exists`,
+  errorMessage: `User "${email}" already exists`,
 });
 
 export const badCredentials = (): ApiError => ({

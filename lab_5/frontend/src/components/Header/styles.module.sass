@@ -1,0 +1,48 @@
+
+.header
+  height: 50px
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  align-items: center
+  background: #50437f
+  animation: header 1.5s ease forwards
+@keyframes header
+  from
+    //transform: translate(0, -100%)
+    opacity: 0
+  to
+    //transform: translate(0, 0)
+    opacity: 1
+
+.header_group
+  height: 100%
+  display: flex
+  flex-direction: row
+  justify-content: flex-start
+  align-items: center
+  margin-right: 0.5em
+  margin-left: 0.5em
+
+  .logo
+    height: 80%
+
+  .app_name
+    color: white
+
+    &:hover
+      text-decoration: underline
+
+  & img
+    height: 60%
+    margin-right: 0.5em
+
+  & svg
+    margin-left: 0.5em
+    border-radius: 3px
+    -webkit-transition: all 0.2s
+    -moz-transition: all 0.2s
+    transition: all 0.2s
+    &:hover
+      cursor: pointer
+      background: #8589de

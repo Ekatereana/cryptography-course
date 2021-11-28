@@ -1,0 +1,19 @@
+@import url(https://fonts.googleapis.com/css?family=Montserrat);
+@import '../node_modules/react-redux-toastr/lib/css/react-redux-toastr.min.css';
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

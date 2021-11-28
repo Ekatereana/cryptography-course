@@ -1,12 +1,12 @@
 use rand::rngs::ThreadRng;
 use rand::{thread_rng, Rng};
 
-const ALPHABET: [char; 85] = [
+const ALPHABET: [char; 84] = [
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
     't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
     'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5',
     '6', '7', '8', '9', '0', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=',
-    '+', '/', '|', ',', '?', '<', '>', ':', ';',
+    '+', '/', '|', '?', '<', '>', ':', ';',
 ];
 const DEFAULT_PASSWORD_LEN: usize = 12;
 
@@ -64,30 +64,38 @@ impl PasswordGenerator {
             .replace("ch", "4")
     }
 
-    fn generate_password(&mut self) -> String {
+    pub fn generate_password(&mut self) -> String {
         match self.rand.gen::<u16>() % 1000 {
             0..=100 => self.generate_random_password(),
             101..=700 => self.common[self.rand.gen::<usize>() % self.common.len()].clone(),
             _ => self.generate_humanlike_password(),
         }
     }
+}
 
-    pub fn generate_passwords(&mut self, amount: usize) -> Vec<String> {
-        if amount > 100 {
-            (1..=amount)
-                .map(|_| self.generate_password())
-                .collect::<Vec<String>>()
-        } else {
-            let mut threads = Vec::with_capacity(100);
-            let amount_thread = amount / 100;
-            for _ in 0..100 {
-                std::thread::spawn(|| {
-                   let res = (1..=amount_thread)
-                           .map(|_| self.generate_password())
-                           .collect::<Vec<String>>();
-                });
-            }
-            Vec::new()
+pub fn generate_passwords(amount: usize) -> Vec<String> {
+    if amount < 100 {
+        let mut generator = PasswordGenerator::new("top_passwords.txt", "dictionary.txt");
+        (1..=amount)
+            .map(|_| generator.generate_password())
+            .collect::<Vec<String>>()
+    } else {
+        let mut threads = Vec::with_capacity(100);
+        let amount_thread = amount / 20;
+        for _ in 0..20 {
+            threads.push(std::thread::spawn(move || {
+                let mut generator = PasswordGenerator::new("top_passwords.txt", "dictionary.txt");
+                (1..=amount_thread)
+                    .map(|_| generator.generate_password())
+                    .collect::<Vec<String>>()
+            }));
         }
+        let mut passwords = Vec::with_capacity(amount);
+        for thread in threads {
+            let res = thread.join().unwrap();
+            passwords.extend_from_slice(&res);
+        }
+        println!("generated");
+        passwords
     }
 }

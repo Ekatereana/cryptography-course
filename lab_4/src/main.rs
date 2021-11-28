@@ -13,12 +13,18 @@ fn main() {
             .parse::<usize>()
             .expect("expect valid integer literal");
 
-        let mut password_generator =
-            generator::PasswordGenerator::new("top_passwords.txt", "dictionary.txt");
-        let passwords = password_generator.generate_passwords(n);
+        let passwords = generator::generate_passwords(n);
 
         let data = if matches.is_present(config::ARG_HASH) {
-            hasher::hash_passwords(&passwords, &matches.values_of(config::ARG_HASH).unwrap())
+            hasher::hash_passwords(
+                passwords,
+                matches
+                    .values_of(config::ARG_HASH)
+                    .unwrap()
+                    .into_iter()
+                    .map(|e| e.to_owned())
+                    .collect(),
+            )
         } else {
             passwords
                 .into_iter()

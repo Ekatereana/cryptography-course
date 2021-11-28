@@ -5,16 +5,17 @@ fn to_csv(data: &Vec<HashMap<&str, String>>, order: Vec<&str>) -> String {
     let mut header: String = order.join(",");
     header.push('\n');
     header.push_str(
-    &data.iter()
-        .map(|r| {
-            let mut res = Vec::new();
-            for key in order.iter() {
-                res.push(r.get(key).unwrap().to_owned());
-            }
-            res.join(",")
-        })
-        .collect::<Vec<String>>()
-        .join("\n")
+        &data
+            .iter()
+            .map(|r| {
+                let mut res = Vec::new();
+                for key in order.iter() {
+                    res.push(r.get(key).unwrap().to_owned());
+                }
+                res.join(",")
+            })
+            .collect::<Vec<String>>()
+            .join("\n"),
     );
     header
 }

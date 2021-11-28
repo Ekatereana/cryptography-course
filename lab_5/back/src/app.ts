@@ -12,6 +12,7 @@ export class Application {
   private fastifyServer: any;
 
   constructor() {
+    checkAndGetEnv('CIPHER_KEY');
     this.database = new Postgres({
       max: 20,
       idleTimeoutMillis: 10000,

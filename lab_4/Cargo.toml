@@ -1,0 +1,16 @@
+[package]
+name = "lab_4"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "0.5.1"
+prettytable-rs = "0.8.0"
+rand = "0.8.4" # not secure random number generator
+md5 = "0.7.0"
+rust-argon2 = "0.8.3"
+rand_chacha = "0.3.0" # A cryptographically secure random number generator that uses the ChaCha algorithm
+bcrypt = "0.10"
+sha2 = "0.9.8"

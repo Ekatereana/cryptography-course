@@ -1,0 +1,30 @@
+image: docker:latest
+
+stages:
+  - tests
+  - deploy
+
+cache:
+  untracked: true
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules
+
+tests:
+  stage: tests
+  script:
+    - echo "All good!"
+
+deploy:
+  stage: deploy
+  only:
+    - master
+  image: google/cloud-sdk
+  services:
+    - docker:dind
+  script:
+    - echo $GCP_SERVICE_KEY > gcloud-service-key.json
+    - gcloud auth activate-service-account --key-file gcloud-service-key.json
+    - gcloud config set project $GCP_PROJECT_ID
+    - gcloud builds submit -t gcr.io/$GCP_PROJECT_ID/frontend .
+    - gcloud run deploy frontend --image gcr.io/$GCP_PROJECT_ID/frontend --region us-central1 --platform managed --allow-unauthenticated

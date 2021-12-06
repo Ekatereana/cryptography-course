@@ -13,29 +13,28 @@ regexp = re.compile('[^0-9a-zA-Z]+')
 
 def cross_on_index(texts: [], shift: int, word: []):
     pos = 0
-    print(f"cross texts with shift code word: {word}")
     while pos + shift < len(salsa_task):
-        result = cross_texts([texts[pos], texts[pos + shift]])
-        slices = cross_word_n_text(word, result)
-        if len(slices) > 0:
-            print(f"cross texts with pos: {pos} | {pos + shift}")
-            for s in slices:
-                print(s)
+        decoded_elements = cross_on_position(texts, pos, shift, word)
         pos += shift
+
+
+def cross_on_position(texts, pos, shift, word):
+    result = cross_texts([texts[pos], texts[pos + shift]])
+    slices = cross_word_n_text(word, result)
+    if len(slices) > 0:
+        print(f"cross texts with pos: {pos} | {pos + shift}")
+        for s in slices:
+            print(s)
+    return slices
 
 
 def cross_word_n_text(word: [], text: []):
     i = 0
     pretty_texts = []
+
     while i + len(word) < len(text):
         decrypted = bytes([b_c ^ b_k for b_c, b_k in zip(text[i:i + len(the_word)], word)])
-        try:
-            decoded = decrypted.decode("ascii")
-
-            if decoded.isalnum() and decoded.isalpha():
-                pretty_texts.append(decoded)
-        except Exception as e:
-            break
+        pretty_texts.append(decrypted)
         i += 1
     return pretty_texts
 
@@ -75,20 +74,22 @@ if __name__ == "__main__":
         "390bcfac282f558a03b9df9dedcc43425244d268c0cfa61602918cbd848481bf3c5c1c47db7c660c63",
         "2f0cdfe464344e8650edc59daac3504b1710d56b89dce5011e8c90f6"
     ]
-    byte_salsa = list([bytes.fromhex(t) for t in salsa_task])
-    print(byte_salsa[0])
-    the_word = b' and '
-    # the_word = b' that '
-    # the_word = b' the '
-    # the_word = b'The '
-    # the_word = b'That '
-    # the_word = b' that '
+    byte_salsa = list([
+        codecs.decode(t, "hex")
+        for t in salsa_task])
+    # the_word = b' and '
 
-    for shift in range(1,
-                       2
-                       # len(salsa_task) - 1
-                       ):
-        cross_on_index(byte_salsa, shift, the_word)
-
-    # for msg in byte_salsa:
-    #     print(decode_msg_on_alphabet(msg))
+    the_word = b'The '
+    print(the_word)
+    xored = binascii.b2a_hqx(xor_two_texts([byte_salsa[0], byte_salsa[1]], 0))
+    print(xored)
+    pretty_texts = cross_word_n_text(the_word, xored)
+    print("texts")
+    for t in pretty_texts:
+        print(t)
+    # #
+    # for shift in range(1,
+    #                    2
+    #                    # len(salsa_task) - 1
+    #                    ):
+    #     cross_on_index(byte_salsa, shift, the_word)

@@ -1,0 +1,16 @@
+1	the	1.81%
+2	and	0.73%
+3	tha	0.33%
+4	ent	0.42%
+5	ing	0.72%
+6	ion	0.42%
+7	tio	0.31%
+8	for	0.34%
+9	nde
+10	has
+11	nce
+12	edt
+13	tis
+14	oft	0.22%
+15	sth	0.21%
+16	men

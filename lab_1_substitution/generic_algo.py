@@ -4,13 +4,12 @@ import pandas
 from random import randint, uniform
 
 # custom
-from config import def_genetic_conf as conf
-from utils import calculate_n_grams, calc_fq
+from lab_1_substitution.utils import calculate_n_grams, calc_fq, get_nth_letter
 
 
 class GeneticAlgo:
 
-    def __init__(self, filename, alphabet):
+    def __init__(self, filename, alphabet, conf, key_length):
         self.generations = conf.config("generations")
         self.population_size = conf.config("population_size")
         self.k_tournament = conf.config("k_tournament")
@@ -22,6 +21,7 @@ class GeneticAlgo:
         self.elitism_percent = conf.config("elitism_percent")
         self.selection_method = conf.config("selection_method")
         self.termination = conf.config("termination")
+        self.key_length = key_length
 
         self.alphabet = alphabet
         self.alphabet_order = list([ord(letter) for letter in alphabet])
@@ -46,6 +46,16 @@ class GeneticAlgo:
 
     # fitness functions helper
 
+    # decrypt with combined key
+    def decrypt_with_patch_key(self, text: bytes, keys: []):
+        with_same_alphabet = [get_nth_letter(text, i, self.key_length) for i in range(0, self.key_length)]
+        decrypted = []
+        for t, key in zip(with_same_alphabet, keys):
+            decrypted.append(self.decrypt_with_key(t, key))
+        combined = self.combine_poly_decoded(decrypted, self.key_length, len(text))
+        return combined
+
+    # decrypt with one key
     def decrypt_with_key(self, text: bytes, key: bytes) -> bytes:
         decrypted = b''
         for byte in text:
@@ -53,8 +63,21 @@ class GeneticAlgo:
             decrypted += bytes(key[id], 'ascii')
         return decrypted
 
-    def fitness(self, text: bytes, chromosome: bytes, pivot: int):
-        decrypted = self.decrypt_with_key(text, chromosome)
+    # merge decoded from several alphabets
+    def combine_poly_decoded(self, decoded_texts: [], alpha_num: int, text_len: int) -> bytes:
+        result = ''
+        symb_id = 0
+        pivot = 0
+        while symb_id < text_len - 1:
+            mode = symb_id % alpha_num
+            result += chr(decoded_texts[mode][pivot])
+            symb_id += 1
+            if mode == 3:
+                pivot += 1
+        return bytes(result, "ascii")
+
+    def fitness(self, text: bytes, chromosome: [], pivot: int):
+        decrypted = self.decrypt_with_patch_key(text, chromosome)
         processed_grams = calculate_n_grams(decrypted, pivot)
         fq_decrypted = list([calc_fq(decrypted, n_gram) for n_gram in processed_grams])
         fq_source = list(
@@ -72,13 +95,17 @@ class GeneticAlgo:
         population = []
 
         for _ in range(self.population_size):
-            key = ''
+            key = []
 
-            while len(key) < 26:
-                r = randint(0, len(self.alphabet) - 1)
+            while len(key) < self.key_length:
+                chromosome = ''
 
-                if self.alphabet[r] not in key:
-                    key += self.alphabet[r]
+                while len(chromosome) < 26:
+                    r = randint(0, len(self.alphabet) - 1)
+
+                    if self.alphabet[r] not in chromosome:
+                        chromosome += self.alphabet[r]
+                key.append(chromosome)
 
             population.append(key)
 
@@ -117,22 +144,22 @@ class GeneticAlgo:
         iteration = 0
 
         while iteration < self.k_tournament:
-            tournament_population = {}
+            tournament_population = []
             iteration += 1
 
             for _ in range(self.tournament_size):
-                if len(population_copy) == 0 : population_copy = population.copy()
+                if len(population_copy) == 0: population_copy = population.copy()
 
                 r = randint(0, max(len(population_copy) - 1, 0))
                 key = population[r]
                 key_fitness = fitness[r]
 
-                tournament_population[key] = key_fitness
+                tournament_population.append((key, key_fitness))
                 population_copy.pop(r)
 
             sorted_tournament_population = \
-                {k: v for k, v in sorted(tournament_population.items(), key=lambda item: item[1], reverse=True)}
-            tournament_keys = list(sorted_tournament_population.keys())
+                sorted(tournament_population, key=lambda item: item[1], reverse=True)
+            tournament_keys = list([item[0] for item in sorted_tournament_population])
 
             index = -1
             selected = False
@@ -161,8 +188,9 @@ class GeneticAlgo:
             else:
                 parent_one, parent_two = self.t_select(population, fitness)
 
-            offspring_one = self.merge_keys(parent_one, parent_two)
-            offspring_two = self.merge_keys(parent_two, parent_one)
+            # todo
+            offspring_one = self.merge_complicated_keys(parent_one, parent_two)
+            offspring_two = self.merge_complicated_keys(parent_two, parent_one)
 
             crossover += [offspring_one, offspring_two]
 
@@ -171,18 +199,18 @@ class GeneticAlgo:
         return crossover
 
     def apply_elitism(self, population, fitness):
-        population_fitness = {}
+        population_fitness = []
 
         for i in range(self.population_size):
             key = population[i]
             value = fitness[i]
 
-            population_fitness[key] = value
+            population_fitness.append((key, value))
 
-        population_fitness = {k: v for k, v in sorted(population_fitness.items(), key=lambda item: item[1])}
-        sorted_pop = list(population_fitness.keys())
+        population_fitness = sorted(population_fitness, key=lambda item: item[1])
+        only_keys = list([key[0] for key in population_fitness])
 
-        elitist = sorted_pop[-self.elitism_count:]
+        elitist = only_keys[-self.elitism_count:]
 
         return elitist
 
@@ -192,11 +220,18 @@ class GeneticAlgo:
 
             if r < self.mutation_probability:
                 key = population[i]
-                mutated_key = self.mutate_key(key)
+                # todo
+                mutated_key = self.mutate_combined_key(key)
 
                 population[i] = mutated_key
 
         return population
+
+    def merge_complicated_keys(self, one_set, two_set):
+        merged = []
+        for o, t in zip(one_set, two_set):
+            merged.append(self.merge_keys(o, t))
+        return merged
 
     def merge_keys(self, one, two):
         offspring = [None] * 26
@@ -217,6 +252,14 @@ class GeneticAlgo:
 
         return ''.join(offspring)
 
+    def mutate_combined_key(self, keys: []) -> []:
+        a = randint(0, len(keys) - 1)
+        b = randint(0, len(keys) - 1)
+        temp = keys[a]
+        keys[a] = keys[b]
+        keys[b] = temp
+        return keys
+
     def mutate_key(self, key):
         a = randint(0, len(key) - 1)
         b = randint(0, len(key) - 1)
@@ -229,11 +272,15 @@ class GeneticAlgo:
         return ''.join(key)
 
     def solve(self, text: bytes):
+        print("initialization")
 
         population = self.initialize()
         highest_fitness = 0
         stuck_counter = 0
+        for inst in population:
+            print(inst)
         for iter in range(self.generations + 1):
+            print(f"--{iter} iteration --")
             fitness = self.evaluate(text, population)
             elitist_population = self.apply_elitism(population, fitness)
             crossover_population = self.cross(population, fitness)
@@ -254,7 +301,7 @@ class GeneticAlgo:
 
             index = fitness.index(highest_fitness)
             key = population[index]
-            decrypted_text = self.decrypt_with_key(text, key)
+            decrypted_text = self.decrypt_with_patch_key(text, key)
 
             if self.verbose:
                 print('[Generation ' + str(iter) + ']', )

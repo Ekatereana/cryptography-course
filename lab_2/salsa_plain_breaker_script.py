@@ -1,11 +1,53 @@
-def decrypt_with_dict(texts: [], dictionary: {}) -> []:
-    return list([replace_from_dict(el, dictionary) for el in texts])
+import codecs
+import re
+from shared_code.utils import single_byte_xor
+from shared_code import alphabet
+import binascii
 
 
-def replace_from_dict(text: [], dictionary: {}) -> []:
-    for key in dictionary.keys():
-        text = text.replace(key, dictionary.get(key))
-    return text
+def cross_on_index(texts: [], shift: int, word: []):
+    pos = 0
+    while pos + shift < len(salsa_task):
+        cross_on_position(texts, pos, shift, word)
+        pos += shift
+
+
+def cross_on_position(texts, pos, shift, word):
+    result = cross_texts([texts[pos], texts[pos + shift]])
+    slices = cross_word_n_text(word, result)
+    if len(slices) > 0:
+        print(f"cross texts with pos: {pos} | {pos + shift}")
+        for s in slices:
+            print(s)
+
+
+def cross_word_n_text(word: [], text: []):
+    i = 0
+    pretty_texts = []
+
+    while i + len(word) < len(text):
+        try:
+            decrypted = bytes([b_c ^ b_k for b_c, b_k in zip(text[i:i + len(the_word)], word)])
+            if decrypted.isalnum():
+                pretty_texts.append(codecs.decode(decrypted, "hex").decode("ascii"))
+        except Exception as e:
+            # print(f"{e} : {decrypted}")
+            continue
+        i += 1
+    return pretty_texts
+
+
+def cross_texts(texts: []):
+    min_l = min(texts, key=len)
+    min_id = texts.index(min_l)
+    crossed_up = xor_two_texts(texts, min_id)
+    return crossed_up
+
+
+def xor_two_texts(texts: [], min_id: int) -> []:
+    iter_num = texts[min_id]
+    decoded = bytes([texts[0][i] ^ texts[1][i] for i in range(len(iter_num))])
+    return decoded
 
 
 if __name__ == "__main__":
@@ -30,31 +72,14 @@ if __name__ == "__main__":
         "390bcfac282f558a03b9df9dedcc43425244d268c0cfa61602918cbd848481bf3c5c1c47db7c660c63",
         "2f0cdfe464344e8650edc59daac3504b1710d56b89dce5011e8c90f6"
     ]
-    char_cap = 2
-    byte_salsa = list([bytes.fromhex(t) for t in salsa_task])
-    the_word = "3a0ade"  # it clould be {The} -- prbably
-    a_t_word = "daaa"  # cloud be at in [T][h]daaa --> That
-    # space = "e4"  # [T][h][e] e4 -- could be space -- wrong hypotheses (spaces ~ 20% in text -- here less). so
-    n = "e4"  # [T][h][e] e4 ~ Then
-    this_word = "ceb72"
+    byte_salsa = list([
+        t.encode("ascii")
+        for t in salsa_task])
 
-    dict_salsa = {
-        the_word[0:2]: '[T]',
-        the_word[2:4]: '[h]',
-        the_word[4:6]: '[e]',
-        a_t_word[0:2]: '[a]',
-        a_t_word[2:4]: '[t]',
-        "39": '[W]', # 39[h]
-        n[0:2]: '[n]',
-        "9c": '[i]',
-        "ab": '[s]',
-        "78": ' '
-        # this_word[0:2]: '[i]',
-        # this_word[2:4]: '[s]'
-    }
+    the_word = binascii.hexlify(b'The p')
 
-    print(dict_salsa)
-
-    decrypted = decrypt_with_dict(salsa_task, dict_salsa)
-    for msg in decrypted:
-        print(msg)
+    for shift in range(1,
+                       # 2
+                       len(byte_salsa) - 1
+                       ):
+        cross_on_index(byte_salsa, shift, the_word)

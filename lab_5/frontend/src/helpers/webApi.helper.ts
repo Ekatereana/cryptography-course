@@ -16,7 +16,7 @@ function formatArgs(args: { [key: string]: string }): string {
 }
 
 function getFetchUrl(args: IRequestArgs) {
-  return `http://localhost:8080` + args.endpoint + (args.args ? `?${formatArgs(args.args)}` : '');
+  return `https://studqueue.ninja` + args.endpoint + (args.args ? `?${formatArgs(args.args)}` : '');
 }
 
 function getFetchArgs(args: IRequestArgs): RequestInit {

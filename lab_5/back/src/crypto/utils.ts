@@ -1,7 +1,7 @@
 import { hash, verify, Options } from 'argon2';
 import { checkAndGetEnv } from '../utils/utils';
 const xsalsa20 = require('xsalsa20');
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 
 const argonOptions = {
   memoryCost: 4096,
@@ -10,7 +10,11 @@ const argonOptions = {
 } as Options & { raw: true };
 
 export const hashPassword = async (password: string): Promise<string> => {
-  const passwordHash = await hash(password, argonOptions);
+  const sha1Hasher = createHash('sha1');
+  sha1Hasher.update(password);
+  let pass = sha1Hasher.digest().toString('hex');
+
+  const passwordHash = await hash(pass, argonOptions);
 
   const cipherKey = checkAndGetEnv('CIPHER_KEY');
 
@@ -33,5 +37,9 @@ export const comparePasswords = async (password: string, hash: string): Promise<
   const xor = xsalsa20(bufferNonce, Buffer.from(cipherKey, 'utf-8'));
   const passwordHash = Buffer.from(xor.update(cipherBuffer)).toString('utf-8');
 
-  return verify(passwordHash, password, argonOptions);
+  const sha1Hasher = createHash('sha1');
+  sha1Hasher.update(password);
+  let pass = sha1Hasher.digest().toString('hex');
+
+  return verify(passwordHash, pass, argonOptions);
 };

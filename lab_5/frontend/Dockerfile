@@ -1,4 +1,4 @@
-FROM node:latest as builder
+FROM node:lts-stretch as builder
 
 WORKDIR /app
 COPY package.json ./

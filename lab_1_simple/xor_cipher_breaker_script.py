@@ -2,7 +2,7 @@ import codecs
 import base64
 import matplotlib.pyplot as plt
 
-from shared_code.xor_utils import single_byte_xor
+from shared_code.utils import single_byte_xor
 
 # dictionary in human mode
 dict_eng_fq = {
@@ -49,6 +49,7 @@ def decode_single_byte_cipher(text: bytes):
 
 
 # solve second task
+
 
 def get_key_length(text):
     sizes = []

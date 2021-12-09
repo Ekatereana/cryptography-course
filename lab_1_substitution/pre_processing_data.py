@@ -1,6 +1,6 @@
 import csv
 import re
-from utils import calculate_n_grams, calc_fq
+from lab_1_substitution.utils import calculate_n_grams, calc_fq
 
 if __name__ == "__main__":
     pattern = r'[0-9/\:\[\]\.\"\?\;\-\,\ ]'

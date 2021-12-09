@@ -1,15 +1,5 @@
-def decrypt_with_dict(texts: [], dictionary: {}) -> []:
-    return list([replace_from_dict(el, dictionary) for el in texts])
-
-
-def replace_from_dict(text: [], dictionary: {}) -> []:
-    for key in dictionary.keys():
-        text = text.replace(key, dictionary.get(key))
-    return text
-
-
-if __name__ == "__main__":
-    salsa_task = [
+const salsa_task =
+[
         "280dc9e47f3352c307f6d894ee8d534313429a79c1d8a6021f8a8eabca919cfb685a0d468973625e757490daa981ea6b",
         "3a0a9cab782b4f8603eac28aadde1151005fd46a859df21d12c38eaa858596bf2548000e883d72117466c5c3a580f66b",
         "3a0adee4783a538403b9c29eaac958550242d3778ed9a61918959bf4ca849afa68450f5edc6e311a7f7ed1d7ec",
@@ -30,31 +20,63 @@ if __name__ == "__main__":
         "390bcfac282f558a03b9df9dedcc43425244d268c0cfa61602918cbd848481bf3c5c1c47db7c660c63",
         "2f0cdfe464344e8650edc59daac3504b1710d56b89dce5011e8c90f6"
     ]
-    char_cap = 2
-    byte_salsa = list([bytes.fromhex(t) for t in salsa_task])
-    the_word = "3a0ade"  # it clould be {The} -- prbably
-    a_t_word = "daaa"  # cloud be at in [T][h]daaa --> That
-    # space = "e4"  # [T][h][e] e4 -- could be space -- wrong hypotheses (spaces ~ 20% in text -- here less). so
-    n = "e4"  # [T][h][e] e4 ~ Then
-    this_word = "ceb72"
 
-    dict_salsa = {
-        the_word[0:2]: '[T]',
-        the_word[2:4]: '[h]',
-        the_word[4:6]: '[e]',
-        a_t_word[0:2]: '[a]',
-        a_t_word[2:4]: '[t]',
-        "39": '[W]', # 39[h]
-        n[0:2]: '[n]',
-        "9c": '[i]',
-        "ab": '[s]',
-        "78": ' '
-        # this_word[0:2]: '[i]',
-        # this_word[2:4]: '[s]'
+function cross_on_index(shift: number, word: Buffer){
+    let pos = 0;
+    while (pos + shift < salsa_task.length) {
+      cross_on_position(pos, shift, word);
+      pos += shift;
     }
 
-    print(dict_salsa)
+}
 
-    decrypted = decrypt_with_dict(salsa_task, dict_salsa)
-    for msg in decrypted:
-        print(msg)
+const get_ascii_text = salsa_task.map((line) => Buffer.from(line, "hex"));
+
+function cross_on_position(pos: number, shift: number, word: Buffer){
+    let result = xor_two_texts(get_ascii_text[pos], get_ascii_text[pos + shift]);
+    let slices = cross_word_n_text(word, result);
+    if (slices.length > 0){
+        console.log("cross texts with pos:", pos, " | ", pos + shift)
+        let i = 0
+        while (i < slices.length - 1){
+            console.log(slices[i])
+            i++
+        }
+    }
+}
+
+
+
+function cross_word_n_text(word: Buffer, text: Buffer){
+    let i = 0;
+    const pretty_texts = new Array<string>();
+    while (i + word.length < text.length - 1){
+        let decrypted = xor_two_texts(word, text.slice(i, i + word.length)).toString();
+           if(!/[^a-zA-z]/.test(decrypted)){
+                pretty_texts.push(decrypted);
+           }
+        i += 1
+    }
+    return pretty_texts;
+ }
+
+
+function xor_two_texts(a: Buffer, b: Buffer): Buffer {
+  const res: number[] = [];
+
+  for (const [index, el] of a.entries()) {
+    res.push(el ^ (b[index] ?? 0));
+  }
+  return Buffer.from(res);
+}
+
+const xored = xor_two_texts(get_ascii_text[3], get_ascii_text[4]);
+console.log([
+  xor_two_texts(Buffer.from("That patient merit of"), xored).toString(),
+]);
+
+// cross_on_index(1, Buffer.from("That"))
+
+//  the unworthy takes (not takes)  [Shakespeare, Hamlet]
+// 3  That patient merit of
+// 4  The insolence of offic,

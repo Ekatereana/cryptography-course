@@ -71,11 +71,11 @@ function xor_two_texts(a: Buffer, b: Buffer): Buffer {
 }
 
 const xored = xor_two_texts(get_ascii_text[3], get_ascii_text[4]);
-console.log([
-  xor_two_texts(Buffer.from("That patient merit of"), xored).toString(),
-]);
+// console.log([
+//   xor_two_texts(Buffer.from("That patient merit of "), xored).toString(),
+// ]);
 
-// cross_on_index(1, Buffer.from("That"))
+cross_on_index(1, Buffer.from("That"))
 
 //  the unworthy takes (not takes)  [Shakespeare, Hamlet]
 // 3  That patient merit of

